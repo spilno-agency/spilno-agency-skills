@@ -1,100 +1,82 @@
 ---
-name: ga4-roas-corridor-analysis
+name: spilno-ga4-roas-corridor-analysis
 description: |
-  Conducts a complete Google Ads efficiency analysis through Google Analytics 4 and builds a branded report as a Google Doc.
-  Uses the "ROAS corridor" method — takes actual ROAS variance over 6 months and forecasts revenue growth at higher budget levels.
-  Trigger this skill whenever the user asks (in any language): "ROAS analysis for [site]", "analyze Google Ads for [site]", "ROAS corridor for [site]", "Google Ads budget forecast", "what happens if I increase budget by X", "revenue per 1 unit of ad spend", "ROAS [site]", "Google Ads efficiency [site]", "analyze GA4 ads", "ad effectiveness analysis [site]", or any request to evaluate ROAS / budget forecast / Google Ads efficiency from GA4 data.
-  Trigger AGGRESSIVELY whenever Google Ads, ROAS, GA4, ad budget, or revenue forecast are mentioned together with a specific site — even if the user doesn't explicitly say "skill", "report", or "corridor".
+  Проводить повний аналіз ефективності Google Ads через Google Analytics 4 і будує звіт у фірмовому стилі Spilno Agency.
+  Використовує метод «коридор коливання ROAS» — бере фактичну варіативність за 6 місяців і будує прогноз приросту доходу при збільшенні бюджету.
+  Trigger this skill whenever the user asks to: "проведи аналіз ROAS Google Ads для [сайт]", "проаналізуй Google Ads для [сайт]", "коридор ROAS для [сайт]", "побудуй прогноз бюджету Google Ads", "оціни що буде якщо збільшити бюджет на X грн", "який дохід з 1 грн витрат на рекламу", "ROAS [сайт]", "ефективність Google Ads [сайт]", "проаналізуй рекламу в GA4", "аналіз ефективності реклами [сайт]", або будь-який запит, де потрібно оцінити ROAS / прогноз бюджету / ефективність Google Ads за даними GA4.
+  Trigger AGGRESSIVELY whenever Google Ads, ROAS, GA4, бюджет реклами, або прогноз доходу згадуються разом з конкретним сайтом — навіть якщо користувач не каже «навичка», «звіт», «коридор» прямо.
 ---
 
 # GA4 ROAS Corridor Analysis
 
-Automates Google Ads efficiency analysis via the Google Analytics 4 UI and produces a branded Google Doc report.
+Автоматизує аналіз ефективності Google Ads через UI Google Analytics 4 і формує брендований звіт у Google Doc.
 
-## When to use
+## Коли застосовувати
 
-The user wants to understand:
-- how much revenue 1 unit of ad spend brings
-- how ROAS has fluctuated over recent months
-- what happens to revenue if budget is increased by 10k / 25k / 50k
-- whether it's worth scaling ads
+Користувач хоче зрозуміти:
+- скільки гривень доходу приносить 1 грн витрат на Google Ads
+- як коливався ROAS за останні місяці
+- що буде з доходом, якщо збільшити бюджет на 10k / 25k / 50k грн
+- варто масштабувати рекламу чи ні
 
-## Inputs from the user
+## Що потрібно від користувача
 
-**Required:**
-- Site domain (e.g. `example.com`)
-- GA4 access in Chrome under the user's Google account
+**Обов'язково:**
+- Домен сайту (наприклад `electros.com.ua`)
+- Доступ до GA4 під обліковим записом користувача в Chrome
 
-**Optional (with defaults):**
-- Analysis period — defaults to **last 6 complete months**
-- Currency — defaults to local currency of the property
-- Agency / brand name for the report (see [Configuration](#configuration))
+**Опціонально (з дефолтами):**
+- Період аналізу — за замовчуванням **останні 6 повних місяців**
+- Валюта — за замовчуванням **грн**
 
-## Required input prompt
+## Вхідний запит (ОБОВ'ЯЗКОВО)
 
-**Before starting the analysis**, ALWAYS ask the user via `AskUserQuestion` (4 questions):
+**Перед початком аналізу** ЗАВЖДИ запитай користувача через `AskUserQuestion` 4 питання (1 текстове + 3 числові) у форматі:
 
-1. **Project domain to analyze:** (e.g. `example.com`)
-2. **Model growth at +10 000 budget?** (yes / no, default yes)
-3. **Model growth at +25 000 budget?** (yes / no, default yes)
-4. **Model growth at +50 000 budget?** (yes / no, default yes)
+1. **Домен проекту для аналізу:** (наприклад `dneprtrophy.ua`)
+2. **Моделювання зростання при бюджеті +10 000 грн?** (так / ні, default так)
+3. **Моделювання зростання при бюджеті +25 000 грн?** (так / ні, default так)
+4. **Моделювання зростання при бюджеті +50 000 грн?** (так / ні, default так)
 
-If the domain was already passed as a command argument — skip question #1, but still ask 2–4 to confirm scenarios. The user can disable any scenario (then exclude it from final tables) or add a custom one (via "Other").
+Якщо в команді вже передано домен як аргумент — пропусти питання #1, але задай питання 2–4 щоб підтвердити сценарії бюджетів. Користувач може вимкнути будь-який зі сценаріїв (тоді не включай його в фінальні таблиці), або додати власний (через «Other»).
 
-Don't guess these — ask first, then work.
+Не вгадуй ці дані — спершу запит, потім робота.
 
-## Configuration
+## Передумови
 
-The skill produces a report branded with your agency name. To customize:
+1. У Chrome встановлено розширення **Claude for Chrome** і користувач залогінений у Google під акаунтом, який має доступ до GA4.
+2. У property GA4 налаштований **e-commerce tracking** з подією **purchase**.
+3. GA4 property пов'язаний з Google Ads (інакше Cost буде нульовий — попередь користувача і запропонуй взяти дані з Google Ads UI напряму).
 
-1. Create a file `~/.claude/skills/ga4-roas-corridor-analysis/config.json` with:
-   ```json
-   {
-     "agency_name": "Your Agency Name",
-     "default_responsible": "Your Name",
-     "doc_title_template": "Revenue growth forecast for budget increase in Google Ads / {domain} / {agency_name}",
-     "currency_symbol": "грн",
-     "language": "uk"
-   }
-   ```
-2. If no config — defaults: `agency_name = "{AGENCY_NAME}"` (placeholder user can find/replace), `language = "uk"`, `currency_symbol = "грн"`.
-3. CSS styling in the HTML template is a sensible default (Montserrat, clean tables). Override it in the config under `css` key if needed.
+## Алгоритм
 
-## Prerequisites
+### Крок 1. Знайти GA4 property
 
-1. **Claude for Chrome** extension installed and the user is logged into Google with an account that has GA4 access.
-2. The GA4 property has **e-commerce tracking** with a **purchase** event configured.
-3. The GA4 property is linked to Google Ads (otherwise Cost will be zero — warn the user and offer to pull Cost from Google Ads UI directly).
+Відкрий https://analytics.google.com через `navigate`. Клікни на селектор property у верхньому лівому куті, у поле пошуку введи домен (без `.com.ua`, наприклад `electros`). Якщо нічого не знаходить — попроси користувача перелогінитись під правильним акаунтом. Знайди property і клікни на нього. Запам'ятай `property_id` з URL (формат `/a<account_id>p<property_id>/`).
 
-## Algorithm
+### Крок 2. Перейти в звіт «Эффективность конверсий»
 
-### Step 1. Find the GA4 property
+Прямий URL працює нестабільно — використовуй навігацію через сайдбар:
+1. Клікни на іконку «Реклама» (ліва панель, ~3-я іконка згори)
+2. У підменю клікни «Эффективность конверсий» (під «Конверсии»)
 
-Open https://analytics.google.com via `navigate`. Click the property selector in the top-left, type the domain (without TLD, e.g. `example` for `example.com`) in the search box. If nothing is found — ask the user to switch Google accounts. Find the property and click it. Remember the `property_id` from the URL (format `/a<account_id>p<property_id>/`).
+Звіт «Эффективность конверсий» — єдиний у GA4 UI, де помісячно доступні і Cost, і Revenue по каналах.
 
-### Step 2. Navigate to "Conversion Performance" report
+### Крок 3. Фільтрувати по purchase
 
-Direct URL is unstable — use sidebar navigation:
-1. Click the "Advertising" icon (left panel, ~3rd icon from top)
-2. In the submenu click "Conversion performance" (under "Conversions")
+Зверху клікни на dropdown ключових подій (за замовчуванням «2 з 2 конверсій»). У списку **зніми галочку** з усіх подій крім **«[домен] purchase»**. Натисни «Применить».
 
-"Conversion performance" is the only GA4 UI report where Cost and Revenue are available per month per channel.
+Перевір що фільтр застосувався — у dropdown тепер має бути назва конкретної purchase-події.
 
-### Step 3. Filter by purchase
+### Крок 4. Зібрати помісячні дані за 6 місяців
 
-Top of report — click the conversion-events dropdown (default shows "X of Y conversions"). **Uncheck** everything except **"[domain] purchase"**. Click "Apply".
+Для кожного з 6 останніх повних місяців:
 
-Verify the filter — the dropdown should now show the specific purchase event name.
-
-### Step 4. Collect monthly data for 6 months
-
-For each of the last 6 complete months:
-
-1. Click the date picker in the top-right
-2. In "Start date" / "End date" fields type the first and last day of the month in `YYYY-MM-DD`
-3. Click "Apply"
-4. Wait 6 seconds for load
-5. Extract table data via JavaScript:
+1. Клікни на date picker у верхньому правому куті
+2. У поля «Дата начала» / «Дата окончания» введи перший і останній день місяця у форматі `YYYY-MM-DD`
+3. Натисни «Применить»
+4. Зачекай 6 секунд на завантаження
+5. Витягни дані з таблиці через JavaScript:
 
 ```javascript
 var rows = document.querySelectorAll('tr');
@@ -110,66 +92,66 @@ rows.forEach(r => {
 data.join('\n')
 ```
 
-Column order: `Channel | All conversions | Ad cost | CPA | Impressions | Clicks | CPC | Total revenue | ROAS`.
+Структура колонок (порядок): `Канал | Все конверсии | Стоимость рекламы | CPA | Показы | Клики | CPC | Общий доход | ROAS`.
 
-From each month take ONLY Google Ads channels:
-- **Cross-network** (this is Performance Max)
+З кожного місяця бери ТІЛЬКИ канали Google Ads:
+- **Cross-network** (це Performance Max)
 - **Paid Shopping**
 - **Paid Search**
 
-Sum their Cost and Revenue — these are your monthly Google Ads Cost / Revenue.
+Сумуй їхні Cost і Revenue — це твої місячні Cost / Revenue Google Ads.
 
-**Important: use `browser_batch`** for each cycle (open date picker → enter both dates → click Apply → wait) — significantly faster than individual calls.
+**Важливо: використовуй `browser_batch`** для кожного циклу (відкрити date picker → ввести дві дати → натиснути Применить → зачекати) — це значно швидше за окремі виклики.
 
-### Step 5. Calculations
+### Крок 5. Розрахунки
 
-For each month: `ROAS = Revenue / Cost`.
+Для кожного місяця: `ROAS = Revenue / Cost`.
 
-Across the 6 points calculate:
-- **MIN ROAS** — lowest value (pessimistic scenario)
-- **MAX ROAS** — highest (optimistic)
-- **AVG ROAS** — arithmetic mean (baseline)
-- **Standard deviation** σ
-- **Coefficient of variation** CV = σ / AVG
+По 6 точках обчисли:
+- **MIN ROAS** — найменше значення (це песимістичний сценарій)
+- **MAX ROAS** — найбільше (оптимістичний)
+- **AVG ROAS** — середнє арифметичне (базовий)
+- **Стандартне відхилення** σ
+- **Коефіцієнт варіації** CV = σ / AVG
 
-CV < 15% → corridor stable, forecast reliable.
-CV > 25% → warn user about instability.
+CV < 15% → коридор стабільний, прогноз надійний.
+CV > 25% → попередь користувача про нестабільність.
 
-### Step 6. Revenue growth forecast
+### Крок 6. Прогноз приросту доходу
 
-Current monthly budget = avg Cost across 6 months.
-Current monthly revenue = avg Revenue across 6 months.
+Поточний місячний бюджет = середній Cost за 6 місяців.
+Поточний місячний дохід = середній Revenue за 6 місяців.
 
-For each scenario (only those the user confirmed in the input prompt):
+Для кожного сценарію (+10k, +25k, +50k за замовчуванням):
 
-| Scenario | Pessimistic (Δ × MIN) | Baseline (Δ × AVG) | Optimistic (Δ × MAX) |
+| Сценарій | Песимістично (Δ × MIN) | Базовий (Δ × AVG) | Оптимістично (Δ × MAX) |
 
-Separately — absolute new-revenue table: `(current budget + Δ) × ROAS`.
+Окремо — таблиця абсолютного нового доходу: `(поточний бюджет + Δ) × ROAS`.
 
-### Step 7. Create the Google Doc report
+### Крок 7. Створити Google Doc у стилі Spilno Agency
 
-Call the Google Drive `create_file` tool (mcp tool name depends on connected Drive MCP) with parameters:
-- `title`: `{doc_title_template}` from config, filled with `{domain}` and `{agency_name}`
+Викликай `mcp__c77c66ab-f749-437d-9337-2465b544d136__create_file` з параметрами:
+- `title`: `Прогноз зростання доходу при збільшенні бюджета в Google Ads / [домен] / Spilno Agency`
 - `contentMimeType`: `text/html`
-- `textContent`: HTML per template below
+- `textContent`: HTML за шаблоном (див. нижче)
 
-HTML is created as a file on Drive. Then:
-1. Open `https://drive.google.com/file/d/[FILE_ID]/view` in Chrome
-2. Click "Open with" → "Google Docs"
-3. Wait for conversion — a new Google Doc with formatting is created
+HTML створиться як файл на Drive. Далі:
+1. Відкрий `https://drive.google.com/file/d/[FILE_ID]/view` у Chrome
+2. Клікни «Відкрити через» → «Google Документи»
+3. Зачекай конвертації — створиться новий Google Doc з форматуванням
 
-Alternatively — after `create_file` use the URL `https://docs.google.com/document/d/[FILE_ID]/edit` and tell the user.
+Альтернативно — після `create_file` запиши URL виду `https://docs.google.com/document/d/[FILE_ID]/edit` і повідом користувачу.
 
-### Step 8. Present the result
+### Крок 8. Презентувати результат
 
-Give the user:
-- Clickable link to the Google Doc
-- Short chat summary: average ROAS, corridor, recommended scenario
-- 1–2 caveats (if any — low CV, incomplete year, small Paid Search sample, etc.)
+Дай користувачу:
+- Посилання на Google Doc (клікабельне)
+- Короткий summary в чаті: середній ROAS, коридор, рекомендований сценарій
+- Список 1-2 застережень (якщо є — низький CV, неповний рік даних, мала вибірка по Paid Search тощо)
 
-## HTML template for Google Doc
+## Шаблон HTML для Google Doc
 
-Default CSS in `<head>` (clean Montserrat-based style; override via config):
+Використовуй цей CSS у `<head>` (відповідає брендбуку Spilno Agency):
 
 ```css
 body, p, h1, h2, h3, table, td, th, li { font-family: 'Montserrat', sans-serif; line-height: 1.5; text-align: left; }
@@ -185,100 +167,100 @@ ol { padding-left: 24pt; }
 ol li { margin-bottom: 4pt; }
 ```
 
-Document structure (numbered sections, no trailing period in headings):
+Структура документа (нумеровані розділи, без крапки в кінці заголовка):
 
-**IMPORTANT — Pageless mode & collapsible sections:** After the Google Doc is created, ALWAYS switch it to Pageless mode (File → Page setup → "Pageless" tab → Apply). In this mode all H2 headings auto-collapse — the user can hide service sections and see the essentials immediately.
+**ВАЖЛИВО — Pageless mode і розкривні розділи:** Після створення Google Doc, ОБОВ'ЯЗКОВО переключи документ у режим Pageless (Файл → Налаштування сторінки → вкладка «Без сторінок» → Застосувати). У цьому режимі всі заголовки (H2) автоматично стають розкривними — користувач може приховати службові розділи і одразу бачити суть.
 
-Section order:
+Порядок розділів:
 
-1. **Header** (h1):
-   - Document title (H1) — **"Revenue growth forecast for budget increase in Google Ads for [domain]"**
-   - Fields: Responsible, Updated (format `DD/MM/YY`), Project, Analysis period
-2. **"Technical analysis details"** (NO number — preamble, usually collapsed) — GA4 report name, menu path, property ID, account. H2 heading without numeric prefix so it doesn't shift numbering. Source-of-data quick-reference.
-3. **"1. Task description"** — formulation: "Forecast how much project [domain] revenue grows when monthly Google Ads budget is increased by [scenarios]. Method — ROAS corridor based on actual GA4 data for [period]".
-4. **"2. What was done"** — numbered list of steps
-5. **"3. Monthly Google Ads dynamics"** — 6-month table (Month / Cost / Revenue / Purchases / ROAS) + bottom row "Total 6 months"
-6. **"4. ROAS corridor"** — table with MIN / AVG / MAX / σ / CV
-7. **"5. Revenue growth forecast"** — table Δ Budget × confirmed scenarios
-8. **"6. Total monthly revenue forecast"** — table: Scenario / Budget / Min revenue / Avg / Max
-9. **"7. Key observations"** — numbered list 4–6 items
-10. **"8. Method limitations"** (usually collapsed) — mandatory numbered list of three limitations (use verbatim wording):
-    1. "**Linear extrapolation.** The forecast assumes ROAS stays in the historical corridor at any budget. In reality marginal ROAS is usually lower than average — each additional dollar buys less-targeted traffic (diminishing returns). So actual growth at +25k / +50k may be 20–40% below optimistic."
-    2. "**Competition ignored.** The method doesn't model competitor actions in the Google Ads auction. If competitors raise bids, part of the extra budget goes to costlier impressions without conversion lift. For accuracy you need Search Lost Impression Share (Rank) and Auction Insights from Google Ads UI."
-    3. "**Market saturation ignored.** GA4 doesn't show how many impressions are still available. If a campaign already wins >80% of impressions (Impression Share), additional budget yields little. Check this separately in Google Ads → Search Lost IS (Budget)."
-11. **"9. Conclusion"** — which scenario to start with, with caveats. ALWAYS reference limitations from section 8 (e.g. "considering limitations from §8 we recommend starting with…").
-12. **"10. TL;DR"** — the headline summary, SHORT (3–5 lines max). Format — numbered list with confirmed scenarios:
-    1. "Budget increase of **+10 000** → revenue grows by **+X** (min to max)."
-    2. "Budget increase of **+25 000** → revenue grows by **+Y** (min to max)."
-    3. "Budget increase of **+50 000** → revenue grows by **+Z** (min to max)."
-    No extra explanations. This is the TL;DR the client reads when everything else is collapsed.
+1. **Шапка** (h1):
+   - Назва документа (H1) — **«Прогноз зростання доходу при збільшенні бюджета в Google Ads для [домен]»**
+   - Поля: Відповідальний, Дата оновлення (формат `ДД/ММ/РР`), Проект, Період аналізу
+2. **Розділ «Технічні деталі аналізу»** (БЕЗ номера — preamble на початку, зазвичай згорнутий) — назва звіту GA4, шлях у меню, ID property, акаунт. Заголовок Heading 2 без цифри «1.», щоб не зсувати нумерацію основних розділів. Це швидке посилання на джерело даних — користувач відразу бачить звідки цифри, і може згорнути.
+3. **Розділ «1. Опис задачі»** — формулювання: «Спрогнозувати на скільки зросте дохід проекту [домен] при збільшенні щомісячного бюджету Google Ads на [сценарії] грн. Метод — коридор коливання ROAS на основі фактичних даних GA4 за [період]».
+4. **Розділ «2. Що було зроблено»** — нумерований список кроків
+5. **Розділ «3. Помісячна динаміка Google Ads»** — таблиця 6 місяців (Місяць / Cost / Revenue / Покупок / ROAS) + останній рядок «Разом 6 міс»
+6. **Розділ «4. Коридор коливання ROAS»** — таблиця з MIN / AVG / MAX / σ / CV
+7. **Розділ «5. Прогноз приросту доходу»** — таблиця Δ Бюджет × 3 сценарії
+8. **Розділ «6. Прогноз загального доходу на місяць»** — таблиця: Сценарій / Бюджет / Мін дохід / Середній / Макс
+9. **Розділ «7. Ключові спостереження»** — нумерований список 4-6 пунктів
+10. **Розділ «8. Обмеження методу»** (зазвичай згорнутий) — обов'язковий нумерований список з трьох обмежень (формулювання нижче — використовуй дослівно):
+    1. «**Лінійний прорахунок.** Прогноз припускає, що ROAS зберігається в історичному коридорі при будь-якому бюджеті. Реально маржинальний ROAS зазвичай нижчий за середній — кожна додаткова гривня витрачається на менш цільовий трафік (закон спадної віддачі). Тому фактичний приріст доходу при +25k / +50k може бути на 20–40% нижчим за оптимістичний сценарій.»
+    2. «**Не враховано конкуренцію.** Метод не моделює дії конкурентів в аукціоні Google Ads. Якщо конкуренти підвищать ставки, частина додаткового бюджету піде на дорожчі покази без приросту конверсій. Для точної оцінки потрібен Search Lost Impression Share (Rank) і Auction Insights з Google Ads UI.»
+    3. «**Не враховано насиченість ринку.** GA4 не показує скільки ще показів доступно у пошуковій видачі. Якщо кампанія вже виграє >80% імпресій (Impression Share), додатковий бюджет дасть лише незначний приріст. Цю метрику треба перевірити окремо в Google Ads → Search Lost IS (Budget).»
+11. **Розділ «9. Висновок»** — рекомендація з якого сценарію стартувати, із застереженнями. ОБОВ'ЯЗКОВО посилайся на обмеження з розділу 8 (наприклад «з урахуванням обмежень п.8 рекомендуємо стартувати з…»).
+12. **Розділ «10. Короткий висновок»** — найголовніший підсумок, ЧІТКО і ДУЖЕ КОРОТКО (3-5 рядків максимум). Формат — нумерований список з 3 сценаріями:
+    1. «При збільшенні бюджету на **+10 000 грн** → дохід зростає на **+X грн** (від мін до макс).»
+    2. «При збільшенні бюджету на **+25 000 грн** → дохід зростає на **+Y грн** (від мін до макс).»
+    3. «При збільшенні бюджету на **+50 000 грн** → дохід зростає на **+Z грн** (від мін до макс).»
+    Без жодних додаткових пояснень. Це TL;DR який читає клієнт коли все інше згорнуто.
 
-Formatting rules:
-- Large numbers space-separated by thousands: `1 340 400`, not `1340400`
-- Numbers in tables right-aligned (`class="num"`)
-- Bold the min / avg / max ROAS and key forecast figures
-- Keep technical terms as-is in any language (PMax, Cross-network, Paid Shopping, ROAS, CPA, CPC)
+Правила оформлення:
+- Великі числа з пробілами на розряди: `1 340 400`, не `1340400`
+- Числа в таблицях по правому краю (`class="num"`)
+- Жирним виділяй мін / середнє / макс ROAS і ключові цифри прогнозу
+- Українська мова, але технічні терміни лишай як є (PMax, Cross-network, Paid Shopping, ROAS, CPA, CPC)
 
-## Technical notes (important)
+## Технічні нюанси (важливо)
 
-**GA4 date picker:**
-- Click the date range top-right (opens panel)
-- "Start date" field — triple_click → type new date → Tab
-- "End date" field — triple_click → type → Tab
-- Click "Apply"
+**Date picker у GA4:**
+- Спершу клікни на діапазон дат угорі справа (відкриває панель)
+- У поле «Дата начала» — triple_click → type новою датою → Tab
+- У поле «Дата окончания» — triple_click → type → Tab
+- Натисни «Применить»
 
 **Google Docs canvas:**
-Google Docs renders content on canvas, so standard selectors may not work for text manipulation. To select doc sections use coordinate click + Shift+click. For scrolling — `scroll` action at a doc coordinate.
+Google Docs рендерить контент через canvas, тому стандартні селектори можуть не працювати для маніпуляції тексту. Для виділення секцій документа використовуй координатний клік + Shift+клік. Для прокрутки — `scroll` action на координаті документа.
 
-**JavaScript-extracted table may be truncated:**
-If `data.join('\n')` shows `[TRUNCATED]` — some channels were cut. Usually not critical, since we only care about Cross-network, Paid Shopping, Paid Search — always in top-5.
+**JavaScript-таблиця може бути обрізаною:**
+Якщо в результаті `data.join('\n')` бачиш `[TRUNCATED]` — деякі канали обрізались. Зазвичай це не критично, бо нас цікавлять тільки Cross-network, Paid Shopping, Paid Search — вони завжди у топ-5.
 
-**If Cost = 0 for all Google Ads channels:**
-Google Ads is not linked in GA4. Warn the user and offer:
-1. Go to Admin → Product Links → Google Ads links and configure the link
-2. Alternatively — pull Cost directly from Google Ads UI ("Campaigns → segment By month" report)
+**Якщо Cost = 0 для всіх Google Ads каналів:**
+Google Ads не залінкований у GA4. Попередь користувача і запропонуй:
+1. Зайти в Admin → Product Links → Google Ads links і налаштувати лінк
+2. Альтернативно — взяти Cost напряму з Google Ads UI (звіт «Кампанії → сегмент По месяцам»)
 
-**If GA4 account/property not found by domain:**
-- Check which Google account is logged in (avatar top-right)
-- Suggest switching accounts
+**Якщо GA4 acc/property не знаходиться по домену:**
+- Перевір під яким Google-акаунтом залогінений Chrome (клікни на аватар праворуч згори)
+- Запропонуй переключитись на акаунт `[user]@[workspace]` якщо там немає потрібного
 
-**"Responsible" field in the doc:**
-Defaults to the logged-in user's name (from GA avatar or email). If unsure — insert `{AGENCY_NAME}` placeholder and tell the user to replace.
+**Поле «Відповідальний» у документі:**
+За замовчуванням — ім'я залогіненого користувача (можна дістати з аватара GA UI або з email). Якщо невпевнений — встав «Spilno Agency» і скажи користувачу що це треба замінити.
 
-**"Updated" field:**
-Today's date in `DD/MM/YY` format from system context.
+**Поле «Дата оновлення»:**
+Сьогоднішня дата у форматі `ДД/ММ/РР`. Бери з `currentDate` в системному контексті.
 
-## What NOT to do
+## Що НЕ робити
 
-- Don't use the standard "Acquisition → Traffic acquisition" report for Cost — no spend column there
-- Don't take attributed revenue from Advertising hub if total revenue from Traffic acquisition is available — total is more correct for forecasting
-- Don't extrapolate Paid Search ROAS to large budgets — small sample (<20 purchases/month)
-- Don't show a forecast without a warning if CV > 20% — ROAS is unstable and the forecast is risky
-- Don't delete the intermediate HTML file after Google Doc conversion (permanent deletion is a prohibited action — let the user delete it)
+- Не використовуй стандартний звіт «Acquisition → Traffic acquisition» для Cost — там немає колонки витрат
+- Не бери attributed revenue з Advertising hub якщо є total revenue з Traffic acquisition — total коректніше для прогнозу
+- Не екстраполюй ROAS Paid Search на великі бюджети — у нього часто мала вибірка (<20 покупок/міс)
+- Не показуй прогноз без застереження, якщо CV > 20% — це означає що ROAS нестабільний і прогноз ризикований
+- Не видаляй проміжний HTML-файл після конвертації в Google Doc (permanent deletion — заборонена дія, нехай користувач видалить сам)
 
-## Trigger examples
+## Приклад тригерів
 
-| User request | Triggers? |
+| Запит користувача | Тригерить? |
 |---|---|
-| "ROAS analysis for example.com" | ✅ |
-| "analyze Google Ads for site.com over a year" | ✅ |
-| "what's the ROI on advertising for example.com" | ✅ |
-| "what happens to revenue if I add 30k to Google Ads budget" | ✅ |
-| "ROAS corridor site.com" | ✅ |
-| "make a Google Ads report" (no specific site) | ❌ — ask for domain first |
-| "configure a Google Ads campaign" | ❌ — different task |
-| "create an ad creative" | ❌ — creative, not analysis |
+| «зроби аналіз ROAS для electros.com.ua» | ✅ |
+| «проаналізуй Google Ads для site.com за рік» | ✅ |
+| «який ROI з реклами на example.com» | ✅ |
+| «що буде з доходом якщо додати 30к до бюджету Google Ads» | ✅ |
+| «коридор ROAS site.com» | ✅ |
+| «зроби звіт по Google Ads» (без конкретного сайту) | ❌ — спитай домен спочатку |
+| «налаштуй кампанію в Google Ads» | ❌ — це інша задача |
+| «створи рекламне оголошення» | ❌ — це креатив, не аналіз |
 
-## Pre-flight checklist (run mentally before finalizing)
+## Контрольний чек-лист (запусти подумки перед фіналом)
 
-- [ ] 6 data points collected (monthly)
-- [ ] Cost ≠ 0 in all months (else Google Ads is not linked)
-- [ ] Purchase filter is active (not the default "X of Y")
-- [ ] MIN / AVG / MAX / σ / CV calculated
-- [ ] Google Doc created with branded style (Montserrat or your CSS override, numbered sections)
-- [ ] Document title in the format `{doc_title_template}` from config
-- [ ] Required fields present (Responsible, Updated, Source data)
-- [ ] "Technical analysis details" section (no number) at the start, right after the header
-- [ ] Document switched to Pageless mode
-- [ ] Section "10. TL;DR" added at the end with confirmed scenarios
-- [ ] User given a clickable Doc URL
+- [ ] Зібрано 6 точок даних (помісячно)
+- [ ] Cost ≠ 0 у всіх місяцях (інакше Google Ads не залінкований)
+- [ ] Фільтр purchase активний (а не «2 з 2»)
+- [ ] Розраховано MIN / AVG / MAX / σ / CV
+- [ ] Створено Google Doc у стилі Spilno Agency (Montserrat, нумеровані розділи)
+- [ ] Назва документа у форматі «Прогноз зростання доходу при збільшенні бюджета в Google Ads / [домен] / Spilno Agency»
+- [ ] У документі є обов'язкові поля (Відповідальний, Дата оновлення, Джерело даних)
+- [ ] Розділ «Технічні деталі аналізу» (БЕЗ номера) винесений на ПОЧАТОК документа одразу після шапки — як швидке посилання на джерело даних
+- [ ] Документ переключений у Pageless mode (Файл → Налаштування сторінки → Без сторінок) — заголовки розкривні
+- [ ] Розділ «10. Короткий висновок» доданий в кінець з трьома короткими сценаріями +10k/+25k/+50k
+- [ ] Користувачу даний клікабельний URL на Doc
