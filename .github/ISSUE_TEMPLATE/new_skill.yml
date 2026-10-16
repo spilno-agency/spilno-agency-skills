@@ -1,0 +1,11 @@
+name: Skill idea
+description: Propose a new marketing / analytics skill
+labels: [enhancement]
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: Which routine task should it automate?
+      description: Platform, inputs, expected report, how long it takes manually today
+    validations:
+      required: true

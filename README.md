@@ -1,8 +1,11 @@
 # Spilno Agency Skills
 
+[![Validate skills](https://github.com/spilno-agency/spilno-agency-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/spilno-agency/spilno-agency-skills/actions/workflows/validate.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
 A collection of open-source [Claude Code](https://claude.com/claude-code) skills for marketing & analytics specialists.
 
-Maintained by [Spilno Agency](https://spilno.agency) — released under MIT so any agency or freelancer can fork, customize, and use them.
+Maintained by [Spilno Agency](https://spilnoagency.com.ua) — released under MIT so any agency or freelancer can fork, customize, and use them.
 
 ---
 
@@ -54,7 +57,7 @@ Each skill's `SKILL.md` lists its specific prerequisites at the top.
 
 ## Configuration
 
-Skills produce branded reports. To customize the brand name, default styling, language, etc., create a `config.json` inside the skill folder in your local `~/.claude/skills/<skill-name>/`:
+Skills produce branded reports. To customize the brand name, default styling, language, etc., copy `config.example.json` to `config.json` inside the skill folder in your local `~/.claude/skills/<skill-name>/`:
 
 ```json
 {
@@ -84,13 +87,10 @@ We built these tools because:
 
 PRs welcome — especially for:
 - New analyses (Search Console, Meta Ads, TikTok Ads, GMB, etc.)
-- Translations (skills are bilingual UA/EN by default; we'd love DE, ES, PL contributions)
+- Translations (the current skill is written in Ukrainian with bilingual UA/EN triggers; DE, ES, PL and EN versions are welcome)
 - Bug fixes for UI selectors when platforms change layout
 
-Before submitting:
-1. Test the skill end-to-end on a real account
-2. Update the relevant `SKILL.md` triggers and checklist
-3. Keep the skill vendor-neutral (no hardcoded agency names in the algorithm — use `{AGENCY_NAME}` placeholder)
+See [CONTRIBUTING.md](./CONTRIBUTING.md). CI runs `scripts/validate_skills.py` on every PR — it checks frontmatter and rejects hardcoded agency names (use the `{AGENCY_NAME}` placeholder).
 
 ---
 
@@ -102,5 +102,5 @@ Before submitting:
 
 ## Authors
 
-- **Spilno Agency** — [spilno.agency](https://spilno.agency)
+- **Spilno Agency** — [spilnoagency.com.ua](https://spilnoagency.com.ua)
 - Community contributors (see `git log`)

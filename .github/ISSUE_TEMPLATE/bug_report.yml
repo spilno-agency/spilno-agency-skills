@@ -1,0 +1,22 @@
+name: Bug report
+description: A skill produced wrong numbers, broke on a UI change, or failed to trigger
+labels: [bug]
+body:
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      placeholder: ga4-roas-corridor-analysis
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened vs. what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Claude Code version, browser extension version, platform UI language (GA4 / Google Ads)
